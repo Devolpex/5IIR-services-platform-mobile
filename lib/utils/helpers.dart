@@ -27,19 +27,3 @@ SizedBox addVerticalSpace(double height) {
   return SizedBox(height: height.h);
 }
 
-///Get timing duration
-String getTimer(DateTime from, DateTime to) {
-  final duration = to.difference(from);
-  String twoDigits(int n) => n.toString().padLeft(2, '');
-  final hours = "${twoDigits(duration.inHours)}hr";
-  final minutes = "${twoDigits(duration.inMinutes.remainder(60))}min";
-  final seconds = "${twoDigits(duration.inSeconds.remainder(60))}sec";
-  return [if (duration.inHours > 0) hours, minutes, seconds].join(' ');
-}
-
-//Capitalize first letter of a word
-String cfl(String str) {
-  if (str.isEmpty) return str;
-  if (str.length == 1) return str.toUpperCase();
-  return str[0].toUpperCase() + str.substring(1).toLowerCase();
-}

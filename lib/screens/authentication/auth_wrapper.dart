@@ -46,6 +46,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               logger.i("AuthWrapper DEMANDEUR");
               return DemandeurPage();
             case 'PRESTATAIRE':
+              logger.i("AuthWrapper PRESTATAIRE");
               return PrestatairePage();
             default:
               return WelcomeScreen();

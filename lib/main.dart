@@ -42,7 +42,7 @@ class AppWidget extends StatelessWidget {
       
       designSize: Size(375, 812),
       builder: (context, child) => GetMaterialApp(
-        debugShowCheckedModeBanner: true, // Add this to show debug banner
+        debugShowCheckedModeBanner: false, 
         title: 'JAIM Services',
         theme: ThemeData(
           primarySwatch: Colors.blue,
