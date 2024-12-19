@@ -36,7 +36,7 @@ class AuthService {
       final data = authBox.keys.map((key) {
         final value = authBox.get(key);
         if (value == null) return null;
-        return value["authToken"];
+        return value["token"];
       }).toList();
       return data.reversed.toList().whereType<String>().single;
     } catch (e) {
