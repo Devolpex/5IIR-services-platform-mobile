@@ -4,4 +4,5 @@ class AuthState extends GetxController {
   RxBool isSignedIn = RxBool(false);
   RxString email = RxString("");
   RxString token = RxString("");
+  RxString role = RxString("");
 }

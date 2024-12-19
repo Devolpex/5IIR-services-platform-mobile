@@ -1,5 +1,6 @@
 
 import 'package:logger/logger.dart';
+import 'package:mobile/controllers/auth.dart';
 import 'package:mobile/models/user_model.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
@@ -12,29 +13,20 @@ class AuthService {
   Box authBox = Hive.box(Boxes.authBox);
   final dio = Dio();
   Logger logger = Logger();
+  bool isSignedIn = false;
 
   User? getAuth() {
-    try {
-      // Fetch the stored accounts from the authBox
-      final data = authBox.keys.map((key) {
-        final value = authBox.get(key);
-        // print("getAuth value: $value");
-        if (value == null) {
-          throw Exception("Unexpected error occurred during login");
-        }
-        // Return the account
-      final accountData = value["account"];
-      if (accountData is Map) {
-        return User.fromJson(Map<String, dynamic>.from(accountData));
-      } else {
-        throw Exception("Invalid account data");
-      }
+  try {
+    final data = authBox.keys.map((key) {
+      final value = authBox.get(key);
+      if (value == null) {
+        throw Exception("Unexpected error occurred during login");
+      }logger.i("getAuth value for key $key: $value");
+        return User.fromJson(Map<String, dynamic>.from(value));
     }).toList();
-      // Return the most recent (or single) account
-      return data.isNotEmpty ? data.last : null;
-    } catch (e) {
-    // Log the error for debugging purposes
-    print("getAuth error: $e");
+    return data.isNotEmpty ? data.last : null;
+  } catch (e) {
+    logger.e("getAuth error: $e");
     return null;
   }
 }
@@ -44,12 +36,6 @@ class AuthService {
       final data = authBox.keys.map((key) {
         final value = authBox.get(key);
         if (value == null) return null;
-
-        DateTime expiredAt = DateTime.parse(value["expiredAt"]);
-        if (!expiredAt.isAfter(DateTime.now())) {
-          removeAuth();
-          throw Exception("Token expired");
-        }
         return value["authToken"];
       }).toList();
       return data.reversed.toList().whereType<String>().single;
@@ -59,21 +45,50 @@ class AuthService {
     }
   }
 
-  Future<bool> addAuth(User account) async {
+  String? getAuthEmail() {
     try {
-      await authBox.add(
-        {
-          "email": account.email,
-          "authToken": account.token,
-          "role": account.role,
-        },
-      );
-      return true;
+      final data = authBox.keys.map((key) {
+        final value = authBox.get(key);
+        if (value == null) return null;
+        return value["email"];
+      }).toList();
+      return data.reversed.toList().whereType<String>().single;
     } catch (e) {
-      print("Sign in failed: ");
-      return false;
+      print("getAuthEmail error: $e");
+      return null;
     }
   }
+
+  String? getAuthRole() {
+    try {
+      final data = authBox.keys.map((key) {
+        final value = authBox.get(key);
+        print("getAuthRole value: $value");
+        if (value == null) return null;
+        return value["role"];
+      }).toList();
+      return data.reversed.toList().whereType<String>().single;
+    } catch (e) {
+      print("getAuthRole error: $e");
+      return null;
+    }
+  }
+
+  Future<bool> addAuth(User account) async {
+  try {
+    await authBox.add({
+        "id": account.id,
+        "email": account.email,
+        "token": account.token,
+        "role": account.role,
+        "verified": account.verified,
+    });
+    return true;
+  } catch (e) {
+    logger.e("Sign in failed: $e");
+    return false;
+  }
+}
 
   Future<bool> removeAuth() async {
     try {
@@ -98,6 +113,7 @@ class AuthService {
 
     final success = await addAuth(account);
     if (success) {
+      isSignedIn = true;
       onAuthCompleted(true, null);
       return true;
     } else {

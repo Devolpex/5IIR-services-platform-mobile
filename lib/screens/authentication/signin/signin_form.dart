@@ -44,9 +44,13 @@ class _SignInFormState extends State<SignInForm> {
           title: "Success",
           type: MessageType.success,
         );
+        showMessage(
+          message: "Authenticated as $email",
+          title: "Success",
+          type: MessageType.success,
+        );
         Future.delayed(const Duration(milliseconds: 400), () {
           auth.isSignedIn.value = true;
-
           // Close the dialog after successful sign-in
           Navigator.of(context).pop();
         });
@@ -62,29 +66,6 @@ class _SignInFormState extends State<SignInForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Use Obx to reactively check the signed-in state
-    return Obx(() {
-      // If the user is signed in, show a success message
-      if (auth.isSignedIn.value) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                CupertinoIcons.checkmark_alt_circle_fill,
-                color: Colors.green,
-                size: 50.h,
-              ),
-              SizedBox(height: 10.h),
-              Text(
-                "You are signed in as ${auth.email}",
-                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        );
-      }
-
       // If the user is not signed in, show the sign-in form
       final loading = _isLoading == IsLoading.loading;
 
@@ -148,6 +129,7 @@ class _SignInFormState extends State<SignInForm> {
           ],
         ),
       );
-    });
+    }
+    // );
   }
-}
+// }
