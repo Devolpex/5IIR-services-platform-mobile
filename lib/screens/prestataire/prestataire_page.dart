@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 
-class LayoutPage extends StatelessWidget {
-  LayoutPage({Key? key}) : super(key: key);
+class PrestatairePage extends StatelessWidget {
+  PrestatairePage({Key? key}) : super(key: key);
   Logger logger = Logger();
 
   @override
   Widget build(BuildContext context) {
-    logger.i("LayoutPage build");
+    logger.i("PrestatairePage build");
     return const Scaffold(
       body: Center(
-        child: Text("Layout Page"),
+        child: Text("Prestataire Page"),
       ),
     );
   }
