@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:mobile/controllers/auth.dart';
+import 'package:mobile/screens/authentication/auth_wrapper.dart';
 import 'package:mobile/screens/authentication/signin/signin_input_field.dart';
 import 'package:mobile/services/auth_service.dart';
 import 'package:mobile/utils/colors.dart';
@@ -53,6 +54,7 @@ class _SignInFormState extends State<SignInForm> {
           auth.isSignedIn.value = true;
           // Close the dialog after successful sign-in
           Navigator.of(context).pop();
+          Get.offAll(() => AuthWrapper());
         });
       } else if (errorMessage != null) {
         showMessage(
