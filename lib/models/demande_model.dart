@@ -1,5 +1,5 @@
 import 'package:mobile/models/demandeur_model.dart';
-import 'package:mobile/models/proposition_model.dart';
+import 'package:mobile/models/dto/propositionDto.dart';
 import 'package:mobile/models/user_model.dart';
 
 class Demande {

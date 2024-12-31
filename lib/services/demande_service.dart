@@ -9,7 +9,7 @@ import 'package:logger/logger.dart';
 import 'package:mobile/controllers/auth.dart';
 import 'package:mobile/models/demande_model.dart';
 import 'package:mobile/models/demandeur_model.dart';
-import 'package:mobile/models/proposition_model.dart';
+import 'package:mobile/models/dto/propositionDto.dart';
 import 'package:mobile/services/auth_service.dart';
 import 'package:mobile/utils/keys.dart';
 import 'package:mobile/utils/top_snackbar.dart';

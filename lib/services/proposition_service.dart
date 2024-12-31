@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
-import 'package:mobile/models/proposition_model.dart';
+import 'package:mobile/models/dto/propositionDto.dart';
 import 'package:mobile/services/auth_service.dart';
 
 import '../utils/keys.dart';
@@ -14,7 +14,7 @@ class PropositionService {
   //   return await _propositionRepository.getPropositions();
   // }
 
-  Future<List<Proposition>> getPropositionByPrestataireId(String id) async {
+  Future<List<Propositiondto>> getPropositionByPrestataireId(String? id) async {
   try {
     final String uri = "$backendUrl/api/proposition/prestataire/$id";
     logger.i("token: $authToken");
@@ -28,10 +28,10 @@ class PropositionService {
 
     logger.i("getPropositionByPrestataireId response: ${response.data}");
 
-    final List<Proposition> propositions = (response.data as List)
-        .map((item) => Proposition.fromJson(item))
+    final propositions = (response.data as List)
+        .map((item) => Propositiondto.fromJson(item))
         .toList();
-    return propositions; // Add this line
+    return propositions as List<Propositiondto>;
   } catch (e) {
     logger.e("Failed to get proposition by prestataire id: $e");
     throw Exception("Failed to get proposition by prestataire id");
