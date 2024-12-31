@@ -7,7 +7,6 @@ import 'package:mobile/services/auth_service.dart';
 import 'package:mobile/services/demande_service.dart';
 import 'package:mobile/services/proposition_service.dart';
 import 'package:mobile/utils/colors.dart';
-
 class PrestatairePage extends StatefulWidget {
   const PrestatairePage({Key? key}) : super(key: key);
 
@@ -66,6 +65,17 @@ class _PrestatairePageState extends State<PrestatairePage> {
     }
   }
 
+  List<Demande> searchResults = [];
+
+  //search method
+  void onQueryChanged(String query) {
+    setState(() {
+      searchResults = demandes
+          .where((demande) => demande.service.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     logger.i("PrestatairePage build, selectedIndex: $selectedIndex");
@@ -97,73 +107,127 @@ class _PrestatairePageState extends State<PrestatairePage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              height: 110,
-              child: DrawerHeader(
-                decoration: BoxDecoration(
-                  color: primary,
-                  shape: BoxShape.rectangle,
-                ),
-                margin: EdgeInsets.zero,
-                child: const Text(
-                  'Menu',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Add a search bar or header
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Search demandes...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
+              onChanged: onQueryChanged,
             ),
-            ...List.generate(menuItems.length, (index) {
-              return ListTile(
-                title: Text(menuItems[index]),
-                selected: selectedIndex == index,
-                onTap: () async {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                  if (selectedIndex == 0) {
-                    await fetchDemandes();
-                  } else if (selectedIndex == 1) {
-                    await fetchPropositions("PRESTATAIRE_ID");
-                  }
-                  Navigator.pop(context);
-                },
-              );
-            }),
-          ],
-        ),
-      ),
-      body: Center(
-        child: selectedIndex == 0
-            ? ListView.builder(
-                itemCount: demandes.length,
-                itemBuilder: (context, index) {
-                  final demande = demandes[index];
-                  return ListTile(
-                    title: Text(demande.service),
-                    subtitle: Text(demande.description),
-                  );
-                },
-              )
-            : selectedIndex == 1
-                ? ListView.builder(
-                    itemCount: propositions.length,
+          ),
+          Expanded(
+            child: demandes.isEmpty
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: searchResults.isEmpty ? demandes.length : searchResults.length,
                     itemBuilder: (context, index) {
-                      final proposition = propositions[index];
-                      return ListTile(
-                        title: Text(proposition.description),
-                        subtitle: Text(proposition.description),
+                      final demande = searchResults.isEmpty ? demandes[index] : searchResults[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                demande.service,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text("Demandeur: ${demande.demandeur.name}"),
+                              Text("Lieu: ${demande.lieu}"),
+                              Text("Date: ${demande.createdAt}"),
+                              Text("Service: ${demande.service}"),
+                              Text("Description: ${demande.description}"),
+                            ],
+                          ),
+                        ),
                       );
                     },
-                  )
-                : Text(menuItems[selectedIndex],
-                    style: const TextStyle(fontSize: 24)),
+                  ),
+          ),
+        ],
       ),
     );
   }
 }
+// drawer: Drawer(
+//         child: ListView(
+//           padding: EdgeInsets.zero,
+//           children: [
+//             Container(
+//               height: 110,
+//               child: DrawerHeader(
+//                 decoration: BoxDecoration(
+//                   color: primary,
+//                   shape: BoxShape.rectangle,
+//                 ),
+//                 margin: EdgeInsets.zero,
+//                 child: const Text(
+//                   'Menu',
+//                   style: TextStyle(
+//                     color: Colors.white,
+//                     fontSize: 24,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//             ...List.generate(menuItems.length, (index) {
+//               return ListTile(
+//                 title: Text(menuItems[index]),
+//                 selected: selectedIndex == index,
+//                 onTap: () async {
+//                   setState(() {
+//                     selectedIndex = index;
+//                   });
+//                   if (selectedIndex == 0) {
+//                     await fetchDemandes();
+//                   } else if (selectedIndex == 1) {
+//                     await fetchPropositions("PRESTATAIRE_ID");
+//                   }
+//                   Navigator.pop(context);
+//                 },
+//               );
+//             }),
+//           ],
+//         ),
+//       ),
+//       body: Center(
+//         child: selectedIndex == 0
+//             ? ListView.builder(
+//                 itemCount: demandes.length,
+//                 itemBuilder: (context, index) {
+//                   final demande = demandes[index];
+//                   return ListTile(
+//                     title: Text(demande.service),
+//                     subtitle: Text(demande.description),
+//                   );
+//                 },
+//               )
+//             : selectedIndex == 1
+//                 ? ListView.builder(
+//                     itemCount: propositions.length,
+//                     itemBuilder: (context, index) {
+//                       final proposition = propositions[index];
+//                       return ListTile(
+//                         title: Text(proposition.description),
+//                         subtitle: Text(proposition.description),
+//                       );
+//                     },
+//                   )
+//                 : Text(menuItems[selectedIndex],
+//                     style: const TextStyle(fontSize: 24)),
+//       ),
