@@ -7,7 +7,6 @@ import 'package:logger/logger.dart';
 
 import 'package:mobile/models/demande_model.dart';
 
-
 import 'package:mobile/services/auth_service.dart';
 import 'package:mobile/utils/keys.dart';
 import 'package:mobile/utils/top_snackbar.dart';
