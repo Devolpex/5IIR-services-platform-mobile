@@ -29,7 +29,7 @@ class _DemandeListState extends State<DemandeList> {
 
   List<Demande> demandes = [];
   List<Demande> searchResults = [];
-
+  
    @override
   void initState() {
     super.initState();
@@ -45,6 +45,10 @@ class _DemandeListState extends State<DemandeList> {
     } catch (e) {
       logger.e("Failed to fetch demandes: $e");
     }
+  }
+
+  void onAproved(){
+    print("Aproved");
   }
 
   void onQueryChanged(String query) {
@@ -107,6 +111,24 @@ class _DemandeListState extends State<DemandeList> {
                                 Text("Date: ${demande.createdAt}"),
                                 Text("Service: ${demande.service}"),
                                 Text("Description: ${demande.description}"),
+                               Row(children: [
+                                FilledButton(
+                                  onPressed: onAproved, style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white
+                                  ),
+                                  child: Text("Approuved"),
+                                ),
+                                SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: onAproved,style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.green[900],
+                                    foregroundColor: Colors.white
+                                  ),
+                                
+                                  child: Text("Details"),
+                                ),
+                               ],),
                               ],
                             ),
                           ),
