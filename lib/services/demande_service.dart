@@ -2,14 +2,11 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:logger/logger.dart';
-import 'package:mobile/controllers/auth.dart';
+
 import 'package:mobile/models/demande_model.dart';
-import 'package:mobile/models/demandeur_model.dart';
-import 'package:mobile/models/dto/propositionDto.dart';
+
 import 'package:mobile/services/auth_service.dart';
 import 'package:mobile/utils/keys.dart';
 import 'package:mobile/utils/top_snackbar.dart';
