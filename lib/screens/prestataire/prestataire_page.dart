@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:mobile/models/demande_model.dart';
-import 'package:mobile/models/proposition_model.dart';
-import 'package:mobile/screens/welcome.dart';
-import 'package:mobile/services/auth_service.dart';
-import 'package:mobile/services/demande_service.dart';
-import 'package:mobile/services/proposition_service.dart';
-import 'package:mobile/utils/colors.dart';
+import 'package:mobile/screens/prestataire/order_list.dart';
+import 'package:mobile/screens/prestataire/proposition_list.dart';
+
+import '../../models/demande_model.dart';
+import '../../services/auth_service.dart';
+import '../../services/demande_service.dart';
+import '../../utils/colors.dart';
+import '../../utils/menu.dart';
+import '../welcome.dart';
+import 'demande_list.dart';
+import 'offer_list.dart';
 
 class PrestatairePage extends StatefulWidget {
   const PrestatairePage({Key? key}) : super(key: key);
@@ -18,29 +22,23 @@ class PrestatairePage extends StatefulWidget {
 class _PrestatairePageState extends State<PrestatairePage> {
   final Logger logger = Logger();
   final DemandeService demandeService = DemandeService();
-  final PropositionService propositionService = PropositionService();
 
-  // List of menu items
   final List<String> menuItems = [
     "Demande List",
-    "Proposition List",
     "Offer List",
     "Order List",
+    "Proposition List",
   ];
 
-  // Current selected menu index
   int selectedIndex = 0;
 
-  // List of demandes and propositions
   List<Demande> demandes = [];
-  List<Proposition> propositions = [];
+  List<Demande> searchResults = [];
 
   @override
   void initState() {
     super.initState();
-    if (selectedIndex == 0) {
-      fetchDemandes();
-    }
+    fetchDemandes(); // Load initial data for Demande List
   }
 
   Future<void> fetchDemandes() async {
@@ -54,15 +52,27 @@ class _PrestatairePageState extends State<PrestatairePage> {
     }
   }
 
-  Future<void> fetchPropositions(String prestataireId) async {
-    try {
-      final fetchedPropositions =
-          await propositionService.getPropositionByPrestataireId(prestataireId);
-      setState(() {
-        propositions = fetchedPropositions;
-      });
-    } catch (e) {
-      logger.e("Failed to fetch propositions: $e");
+  void onQueryChanged(String query) {
+    setState(() {
+      searchResults = demandes
+          .where((demande) =>
+              demande.service.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  Widget buildContent() {
+    switch (selectedIndex) {
+      case 0:
+        return DemandeList();
+      case 1:
+        return OfferList();
+      case 2:
+        return OrderList();
+      case 3:
+        return PropositionList();
+      default:
+        return Center(child: Text("Invalid selection"));
     }
   }
 
@@ -72,7 +82,7 @@ class _PrestatairePageState extends State<PrestatairePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primary,
+        backgroundColor:primary,
         foregroundColor: Colors.white,
         title: Text(menuItems[selectedIndex],
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -85,125 +95,33 @@ class _PrestatairePageState extends State<PrestatairePage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_circle),
+            icon: Icon(Icons.exit_to_app),
             onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (BuildContext context) {
-                  return Container(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: primary,
-                          child: const Icon(Icons.account_circle,
-                              size: 40, color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'User Name',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'user.email@example.com',
-                          style:
-                              TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            AuthService().removeAuth();
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => WelcomeScreen()),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          child: const Text('Logout'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              AuthService().removeAuth();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => WelcomeScreen()),
               );
             },
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            Container(
-              height: 110,
-              child: DrawerHeader(
-                decoration: BoxDecoration(
-                  color: primary,
-                  shape: BoxShape.rectangle,
-                ),
-                margin: EdgeInsets.zero,
-                child: const Text(
-                  'Menu',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-            ),
-            ...List.generate(menuItems.length, (index) {
-              return ListTile(
-                title: Text(menuItems[index]),
-                selected: selectedIndex == index,
-                onTap: () async {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                  if (selectedIndex == 0) {
-                    await fetchDemandes();
-                  } else if (selectedIndex == 1) {
-                    await fetchPropositions("PRESTATAIRE_ID");
-                  }
-                  Navigator.pop(context);
-                },
-              );
-            }),
-          ],
-        ),
+      drawer: Menu(
+        menuItems: menuItems,
+        selectedIndex: selectedIndex,
+        onItemSelected: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
+        pages: [
+          DemandeList(),
+          OrderList(),
+          OfferList(),
+          PropositionList()
+        ], 
       ),
-      body: Center(
-        child: selectedIndex == 0
-            ? ListView.builder(
-                itemCount: demandes.length,
-                itemBuilder: (context, index) {
-                  final demande = demandes[index];
-                  return ListTile(
-                    title: Text(demande.service),
-                    subtitle: Text(demande.description),
-                  );
-                },
-              )
-            : selectedIndex == 1
-                ? ListView.builder(
-                    itemCount: propositions.length,
-                    itemBuilder: (context, index) {
-                      final proposition = propositions[index];
-                      return ListTile(
-                        title: Text(proposition.description),
-                        subtitle: Text(proposition.description),
-                      );
-                    },
-                  )
-                : Text(menuItems[selectedIndex],
-                    style: const TextStyle(fontSize: 24)),
-      ),
+      body: buildContent(),
     );
   }
 }

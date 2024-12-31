@@ -1,11 +1,13 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/material.dart';
+
 import 'package:logger/logger.dart';
-import 'package:mobile/controllers/auth.dart';
+
 import 'package:mobile/models/demande_model.dart';
-import 'package:mobile/models/demandeur_model.dart';
-import 'package:mobile/models/proposition_model.dart';
+
+
 import 'package:mobile/services/auth_service.dart';
 import 'package:mobile/utils/keys.dart';
 import 'package:mobile/utils/top_snackbar.dart';
@@ -14,39 +16,268 @@ class DemandeService {
   final Logger logger = Logger();
   final Dio dio = Dio();
   final String authToken = AuthService().getAuthToken() ?? "";
-  // // Method to create a new Demande
-  // Future<Demande> createDemande(Demande demande) async {
-  //   // Implement the logic to create a new Demande
-  //   // For example, send a POST request to the backend API
-  //   // and return the created Demande object
-  // }
+  final AuthService _authService = AuthService();
 
-  // // Method to update an existing Demande
-  // Future<Demande> updateDemande(String id, Demande demande) async {
-  //   // Implement the logic to update an existing Demande
-  //   // For example, send a PUT request to the backend API
-  //   // and return the updated Demande object
-  // }
+  /// Gestion des erreurs Dio
+  void _handleDioError(DioError e) {
+    if (e.response != null) {
+      logger.e("Erreur Serveur [${e.response?.statusCode}] : ${e.response?.data}");
+    } else {
+      logger.e("Erreur Réseau : ${e.message}");
+    }
+  }
 
-  // // Method to delete an existing Demande
-  // Future<void> deleteDemande(String id) async {
-  //   // Implement the logic to delete an existing Demande
-  //   // For example, send a DELETE request to the backend API
-  // }
+  /// Récupérer la liste des offres
+  Future<List<dynamic>> getOffres() async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
 
-  // // Method to fetch a Demande by its ID
-  // Future<Demande> getDemandeById(String id) async {
-  //   // Implement the logic to fetch a Demande by its ID
-  //   // For example, send a GET request to the backend API
-  //   // and return the fetched Demande object
-  // }
+      final response = await dio.get(
+        "$backendUrl/api/offres/list",
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
 
-  // // Method to fetch a list of all Demandes
-  // Future<List<Demande>> getAllDemandes() async {
-  //   // Implement the logic to fetch a list of all Demandes
-  //   // For example, send a GET request to the backend API
-  //   // and return the list of Demande objects
-  // }
+      if (response.statusCode == 200 && response.data is List) {
+        logger.i("Offres récupérées avec succès.");
+        return response.data;
+      } else {
+        logger.e("Erreur lors de la récupération des offres : ${response.data}");
+        return [];
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      return [];
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la récupération des offres : $e");
+      return [];
+    }
+  }
+
+  /// Approuver une offre
+  Future<void> approveOffer(int offerId, BuildContext context) async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) {
+        throw Exception("Token non trouvé.");
+      }
+
+      // Configuration des en-têtes HTTP
+      final headers = {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+      };
+
+      // URL pour l'approbation de l'offre
+      final orderUrl = "$backendUrl/api/order/offer/confirm/$offerId";
+
+      // Appel PATCH pour approuver l'offre
+      final response = await dio.patch(
+        orderUrl,
+        options: Options(headers: headers),
+      );
+
+      // Gestion de la réponse
+      if (response.statusCode == 200) {
+        print("Offre approuvée avec succès : ${response.data}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Offre approuvée avec succès.")),
+        );
+      } else {
+        print("Erreur lors de l'approbation de l'offre : ${response.data}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Erreur lors de l'approbation de l'offre.")),
+        );
+      }
+    } catch (e) {
+      // Gestion des erreurs
+      print("Erreur lors de l'approbation de l'offre : $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur réseau ou serveur.")),
+      );
+    }
+  }
+
+
+
+  /// Récupérer les détails d'une offre
+  Future<Map<String, dynamic>> getOfferDetails(int id) async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
+
+      final response = await dio.get(
+        "$backendUrl/api/offres/$id",
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        logger.i("Détails de l'offre récupérés avec succès.");
+        return response.data;
+      } else {
+        logger.e("Erreur lors de la récupération des détails de l'offre : ${response.data}");
+        return {};
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      return {};
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la récupération des détails de l'offre : $e");
+      return {};
+    }
+  }
+
+  /// Créer une nouvelle demande
+  Future<void> createDemande(Map<String, dynamic> demandeData) async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
+
+      final response = await dio.post(
+        "$backendUrl/api/demande",
+        data: jsonEncode(demandeData),
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        logger.i("Demande créée avec succès.");
+      } else {
+        logger.e("Erreur lors de la création de la demande : ${response.data}");
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      rethrow;
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la création de la demande : $e");
+      rethrow;
+    }
+  }
+
+
+  /// Mettre à jour une demande existante
+  Future<void> updateDemande(int id, Map<String, dynamic> demandeData) async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
+
+      final response = await dio.put(
+        "$backendUrl/api/demande/$id",
+        data: jsonEncode(demandeData),
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        logger.i("Demande mise à jour avec succès.");
+      } else {
+        logger.e("Erreur lors de la mise à jour de la demande : ${response.data}");
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      rethrow;
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la mise à jour de la demande : $e");
+      rethrow;
+    }
+  }
+
+  /// Récupérer les demandes de l'utilisateur
+  Future<List<dynamic>> getUserDemandes() async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
+
+      final response = await dio.get(
+        "$backendUrl/api/demande/mes-demandes",
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        logger.i("Demandes récupérées avec succès.");
+        return response.data;
+      } else {
+        logger.e("Erreur lors de la récupération des demandes : ${response.data}");
+        return [];
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      return [];
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la récupération des demandes : $e");
+      return [];
+    }
+  }
+  /// Supprimer une demande existante
+  Future<void> deleteDemande(int id) async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
+
+      final response = await dio.delete(
+        "$backendUrl/api/demande/$id",
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
+
+      if (response.statusCode == 204) {
+        logger.i("Demande supprimée avec succès.");
+      } else {
+        logger.e("Erreur lors de la suppression de la demande : ${response.data}");
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      rethrow;
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la suppression de la demande : $e");
+      rethrow;
+    }
+  }
+
+
+  Future<List<dynamic>> getApprovedDemandes() async {
+    try {
+      final token = _authService.getAuthToken();
+      if (token == null) throw Exception("Token non trouvé.");
+
+      final response = await dio.get(
+        "$backendUrl/api/order/demande/confirmed/my-demandes",
+        options: Options(headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        logger.i("Demandes approuvées récupérées avec succès.");
+        return response.data;
+      } else {
+        logger.e("Erreur lors de la récupération des demandes approuvées : ${response.data}");
+        return [];
+      }
+    } on DioError catch (e) {
+      _handleDioError(e);
+      return [];
+    } catch (e) {
+      logger.e("Erreur inconnue lors de la récupération des demandes approuvées : $e");
+      return [];
+    }
+  }
 
   // Method to fetch a paginated list of Demandes
   Future<List<Demande>> getDemandesPage() async {
