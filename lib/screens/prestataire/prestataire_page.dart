@@ -9,6 +9,7 @@ import '../../services/demande_service.dart';
 import '../../utils/colors.dart';
 import '../../utils/menu.dart';
 import '../welcome.dart';
+import 'demande_list.dart';
 import 'offer_list.dart';
 
 class PrestatairePage extends StatefulWidget {
@@ -63,64 +64,7 @@ class _PrestatairePageState extends State<PrestatairePage> {
   Widget buildContent() {
     switch (selectedIndex) {
       case 0:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Search demandes...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onChanged: onQueryChanged,
-              ),
-            ),
-            Expanded(
-              child: demandes.isEmpty
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: searchResults.isEmpty
-                          ? demandes.length
-                          : searchResults.length,
-                      itemBuilder: (context, index) {
-                        final demande = searchResults.isEmpty
-                            ? demandes[index]
-                            : searchResults[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  demande.service,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text("Demandeur: ${demande.demandeur.name}"),
-                                Text("Lieu: ${demande.lieu}"),
-                                Text("Date: ${demande.createdAt}"),
-                                Text("Service: ${demande.service}"),
-                                Text("Description: ${demande.description}"),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        );
+        return DemandeList();
       case 1:
         return OfferList();
       case 2:
@@ -171,6 +115,7 @@ class _PrestatairePageState extends State<PrestatairePage> {
           });
         },
         pages: [
+          DemandeList(),
           OrderList(),
           OfferList(),
           PropositionList()
