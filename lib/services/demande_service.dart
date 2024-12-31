@@ -1,15 +1,19 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
-import 'auth_service.dart';
+import 'package:mobile/controllers/auth.dart';
+import 'package:mobile/models/demande_model.dart';
+import 'package:mobile/models/demandeur_model.dart';
+import 'package:mobile/models/proposition_model.dart';
+import 'package:mobile/services/auth_service.dart';
+import 'package:mobile/utils/keys.dart';
+import 'package:mobile/utils/top_snackbar.dart';
 
 class DemandeService {
-  final Dio _dio = Dio();
-  final AuthService _authService = AuthService();
   final Logger logger = Logger();
-  final String baseUrl = dotenv.env['BACKEND_URL'] ?? "";
+  final Dio dio = Dio();
+  final String authToken = AuthService().getAuthToken() ?? "";
 
   DemandeService() {
     if (baseUrl.isEmpty) {
@@ -34,7 +38,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.get(
-        "$baseUrl/api/offres/list",
+        "$backendUrl/api/offres/list",
         options: Options(headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -72,7 +76,7 @@ class DemandeService {
       };
 
       // URL pour l'approbation de l'offre
-      final orderUrl = "$baseUrl/api/order/offer/confirm/$offerId";
+      final orderUrl = "$backendUrl/api/order/offer/confirm/$offerId";
 
       // Appel PATCH pour approuver l'offre
       final response = await _dio.patch(
@@ -110,7 +114,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.get(
-        "$baseUrl/api/offres/$id",
+        "$backendUrl/api/offres/$id",
         options: Options(headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -140,7 +144,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.post(
-        "$baseUrl/api/demande",
+        "$backendUrl/api/demande",
         data: jsonEncode(demandeData),
         options: Options(headers: {
           "Authorization": "Bearer $token",
@@ -170,7 +174,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.put(
-        "$baseUrl/api/demande/$id",
+        "$backendUrl/api/demande/$id",
         data: jsonEncode(demandeData),
         options: Options(headers: {
           "Authorization": "Bearer $token",
@@ -199,7 +203,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.get(
-        "$baseUrl/api/demande/mes-demandes",
+        "$backendUrl/api/demande/mes-demandes",
         options: Options(headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -228,7 +232,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.delete(
-        "$baseUrl/api/demande/$id",
+        "$backendUrl/api/demande/$id",
         options: Options(headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -256,7 +260,7 @@ class DemandeService {
       if (token == null) throw Exception("Token non trouvé.");
 
       final response = await _dio.get(
-        "$baseUrl/api/order/demande/confirmed/my-demandes",
+        "$backendUrl/api/order/demande/confirmed/my-demandes",
         options: Options(headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -279,5 +283,89 @@ class DemandeService {
     }
   }
 
+  // Method to fetch a paginated list of Demandes
+  Future<List<Demande>> getDemandesPage() async {
+    try {
+    final String uri = "$backendUrl/api/demande";
+    logger.i("token: $authToken");
 
+    // Send POST request with JSON body
+    final response = await dio.get(
+      uri,
+      options: Options(headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      }),
+    );
+    
+    logger.i("Response: ${response.data}");
+    if (response.statusCode == 200) {
+      // Extract the list of demandes from the 'content' field
+      List<dynamic> content = response.data['content'];
+      return content.map((item) => Demande.fromJson(item)).toList();
+    } else {
+      throw Exception("Failed to fetch demandes: ${response.data}");
+    }
+  } on DioException catch (e) {
+    print("DioException: ${e.message}");
+    print("Dio Error Response: ${e.response?.data}");
+    onDioError(e); // Your custom error handler
+  } catch (e) {
+    print("Unknown Error: $e");
+    onUnkownError(e); // Your custom error handler
+  }
+  throw Exception("Unexpected error occurred while fetching demandes");
+  }
+
+  void onDioError(DioException e) {
+    if (e.response != null) {
+      final data = e.response?.data;
+      try {
+        showMessage(
+          message: data["message"],
+          title: data["data"] ?? "Something went wrong",
+          type: MessageType.error,
+        );
+      } catch (e) {
+        showMessage(
+          message:
+              "Something went wrong | Unknown error occured, try again later or contact admin",
+          title: "Internal Server Error",
+          type: MessageType.error,
+        );
+      }
+    } else {
+      String msg = e.message ?? "Unkown error";
+      if (DioExceptionType.receiveTimeout == e.type ||
+          DioExceptionType.sendTimeout == e.type) {
+        msg =
+            "Server is not reachable. Please verify your internet connection and try again";
+      } else
+      // if (e.type != DioErrorType.unknown)
+      {
+        msg = "Problem connecting to the server. Please try again.";
+      }
+      showMessage(
+        message: msg,
+        title: "Something went wrong",
+        type: MessageType.error,
+      );
+    }
+  }
+
+  void onUnkownError(Object e) {
+    showMessage(
+      message: e.toString(),
+      title: "Something went wrong",
+      type: MessageType.error,
+    );
+  }
+
+  void onSuccess({required String title, required String message}) {
+    showMessage(
+      message: message,
+      title: title,
+      type: MessageType.success,
+    );
+  }
 }
