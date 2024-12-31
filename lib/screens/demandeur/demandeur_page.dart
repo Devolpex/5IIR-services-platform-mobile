@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile/utils/colors.dart';
+import '../../services/auth_service.dart';
+import '../welcome.dart';
 import 'OfferDetailsPage.dart';
 import 'CreateDemandePage.dart';
 import 'MyDemandesPage.dart';
@@ -62,6 +65,26 @@ class _DemandeurPageState extends State<DemandeurPage> {
         ),
         centerTitle: true,
         elevation: 6,
+        actions: [
+          IconButton(
+            style: ButtonStyle(
+              padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                const EdgeInsets.all(8),
+              ),
+              foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+            ),
+            icon: Icon(Icons.exit_to_app),
+            onPressed: () {
+              // sign-out logic here
+              AuthService().removeAuth();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => WelcomeScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(

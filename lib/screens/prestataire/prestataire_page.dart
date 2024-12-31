@@ -85,54 +85,14 @@ class _PrestatairePageState extends State<PrestatairePage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_circle),
+            icon: Icon(Icons.exit_to_app),
             onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (BuildContext context) {
-                  return Container(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: primary,
-                          child: const Icon(Icons.account_circle,
-                              size: 40, color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'User Name',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'user.email@example.com',
-                          style:
-                              TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            AuthService().removeAuth();
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => WelcomeScreen()),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          child: const Text('Logout'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
+              AuthService().removeAuth();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => WelcomeScreen()),
+              );           
             },
           ),
         ],
