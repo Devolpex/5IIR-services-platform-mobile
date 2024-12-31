@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
@@ -14,13 +18,7 @@ class DemandeService {
   final Logger logger = Logger();
   final Dio dio = Dio();
   final String authToken = AuthService().getAuthToken() ?? "";
-
-  DemandeService() {
-    if (baseUrl.isEmpty) {
-      logger.e("BACKEND_URL non configuré dans le fichier .env.");
-      throw Exception("BACKEND_URL non configuré.");
-    }
-  }
+  final AuthService _authService = AuthService();
 
   /// Gestion des erreurs Dio
   void _handleDioError(DioError e) {
@@ -37,7 +35,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.get(
+      final response = await dio.get(
         "$backendUrl/api/offres/list",
         options: Options(headers: {
           "Authorization": "Bearer $token",
@@ -79,7 +77,7 @@ class DemandeService {
       final orderUrl = "$backendUrl/api/order/offer/confirm/$offerId";
 
       // Appel PATCH pour approuver l'offre
-      final response = await _dio.patch(
+      final response = await dio.patch(
         orderUrl,
         options: Options(headers: headers),
       );
@@ -113,7 +111,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.get(
+      final response = await dio.get(
         "$backendUrl/api/offres/$id",
         options: Options(headers: {
           "Authorization": "Bearer $token",
@@ -143,7 +141,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.post(
+      final response = await dio.post(
         "$backendUrl/api/demande",
         data: jsonEncode(demandeData),
         options: Options(headers: {
@@ -173,7 +171,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.put(
+      final response = await dio.put(
         "$backendUrl/api/demande/$id",
         data: jsonEncode(demandeData),
         options: Options(headers: {
@@ -202,7 +200,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.get(
+      final response = await dio.get(
         "$backendUrl/api/demande/mes-demandes",
         options: Options(headers: {
           "Authorization": "Bearer $token",
@@ -231,7 +229,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.delete(
+      final response = await dio.delete(
         "$backendUrl/api/demande/$id",
         options: Options(headers: {
           "Authorization": "Bearer $token",
@@ -259,7 +257,7 @@ class DemandeService {
       final token = _authService.getAuthToken();
       if (token == null) throw Exception("Token non trouvé.");
 
-      final response = await _dio.get(
+      final response = await dio.get(
         "$backendUrl/api/order/demande/confirmed/my-demandes",
         options: Options(headers: {
           "Authorization": "Bearer $token",
