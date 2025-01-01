@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:mobile/models/dto/propositionDto.dart';
 import 'package:mobile/services/auth_service.dart';
 
+import '../models/proposition_model.dart';
 import '../utils/keys.dart';
 
 class PropositionService {
@@ -75,9 +76,25 @@ class PropositionService {
     }
   }
 
-  // Future<void> addProposition(Proposition proposition) async {
-  //   return await _propositionRepository.addProposition(proposition);
-  // }
+ Future<void> addProposition(Proposition proposition) async {
+    final String uri = "$backendUrl/api/proposition";
+    logger.i("token: $authToken");
 
+    try {
+      final response = await dio.post(
+        uri,
+        options: Options(headers: {
+          "Authorization": "Bearer $authToken",
+          "Content-Type": "application/json",
+        }),
+        data: jsonEncode(proposition.toJson()),
+      );
+
+      logger.i("addProposition response: ${response.data}");
+    } catch (e) {
+      logger.e("Failed to add proposition: $e");
+      throw Exception("Failed to add proposition");
+    }
+  }
 
 }
