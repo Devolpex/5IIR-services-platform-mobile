@@ -82,6 +82,121 @@ class _PropositionListState extends State<PropositionList> {
     }
   }
 
+  void _showUpdateForm(BuildContext context, Propositiondto proposition) {
+    final TextEditingController descriptionController = TextEditingController(text: proposition.description);
+    final TextEditingController priceController = TextEditingController(text: proposition.tarifProposer.toString());
+    final TextEditingController dateController = TextEditingController(text: proposition.dateDisponible.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Update Proposition"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: "Description",
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: "Tariff Proposer",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: dateController,
+                  decoration: const InputDecoration(
+                    labelText: "Date Disponible",
+                    border: OutlineInputBorder(),
+                  ),
+                  readOnly: true,  // Make the field read-only to avoid direct text input
+                  onTap: () async {
+                    // Show date picker
+                    DateTime? selectedDate = await showDatePicker(
+                      context: context,
+                      initialDate: proposition.dateDisponible ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
+
+                    if (selectedDate != null) {
+                      // Show time picker
+                      TimeOfDay? selectedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(proposition.dateDisponible ?? DateTime.now()),
+                      );
+
+                      if (selectedTime != null) {
+                        // Combine date and time into a single DateTime object
+                        DateTime selectedDateTime = DateTime(
+                          selectedDate.year,
+                          selectedDate.month,
+                          selectedDate.day,
+                          selectedTime.hour,
+                          selectedTime.minute,
+                        );
+                        
+                        dateController.text = selectedDateTime.toString();  // Update the text field with the selected DateTime
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                final Propositiondto updatedProposition = Propositiondto (
+                  description: descriptionController.text,
+                  tarifProposer: double.tryParse(priceController.text),
+                  dateDisponible: DateTime.tryParse(dateController.text),
+                );
+                _updateProposition(updatedProposition, proposition.id!);
+                Navigator.of(context).pop();
+              },
+              child: const Text("Update"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateProposition(Propositiondto proposition, int id) async {
+    try {
+      await propositionService.updateProposition(proposition, id);
+      setState(() {
+        final index = propositions.indexWhere((p) => p.id == id);
+        if (index != -1) {
+          propositions[index] = proposition;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Proposition updated successfully")),
+      );
+    } catch (e) {
+      logger.e("Failed to update proposition: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to update proposition")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -174,9 +289,7 @@ class _PropositionListState extends State<PropositionList> {
                           ),
                           const SizedBox(width: 8),
                           TextButton(
-                            onPressed: () {
-                              // TODO: Add your update logic here
-                            },
+                            onPressed: () => _showUpdateForm(context, proposition),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white,
                               backgroundColor: Colors.orange,
@@ -199,7 +312,7 @@ class _PropositionListState extends State<PropositionList> {
                                         children: [
                                           Text("Description: ${proposition.description}"),
                                           const SizedBox(height: 8),
-                                          Text("Tariff: ${proposition.tarifProposer} TND"),
+                                          Text("TariffProposer: ${proposition.tarifProposer} TND"),
                                           const SizedBox(height: 8),
                                           Text("Available Date: ${proposition.dateDisponible}"),
                                           const SizedBox(height: 8),
@@ -207,7 +320,7 @@ class _PropositionListState extends State<PropositionList> {
                                           const SizedBox(height: 8),
                                           Text("Location: ${proposition.demande?.lieu ?? "Unknown"}"),
                                           const SizedBox(height: 8),
-                                          Text("Requester: ${proposition.demande?.demandeur?.nom ?? "Unknown"}"),
+                                          Text("Demandeur: ${proposition.demande?.demandeur?.nom ?? "Unknown"}"),
                                           const SizedBox(height: 8),
                                           Text("Provider Email: ${proposition.prestataire?.email ?? "Unknown"}"),
                                         ],

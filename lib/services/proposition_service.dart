@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:mobile/models/dto/propositionDto.dart';
@@ -53,12 +55,29 @@ class PropositionService {
     }
   }
 
+  Future<void> updateProposition(Propositiondto proposition,int id ) async {
+    try {
+      final String uri = "$backendUrl/api/proposition/${id}";
+      logger.i("token: $authToken");
+
+      final response = await dio.put(
+        uri,
+        data:  jsonEncode(proposition.toJson()),
+        options: Options(headers: {
+          "Authorization": "Bearer $authToken",
+        }),
+      );
+
+      logger.i("updateProposition response: ${response.data}");
+    } catch (e) {
+      logger.e("Failed to update proposition: $e");
+      throw Exception("Failed to update proposition");
+    }
+  }
+
   // Future<void> addProposition(Proposition proposition) async {
   //   return await _propositionRepository.addProposition(proposition);
   // }
 
-  // Future<void> updateProposition(Proposition proposition) async {
-  //   return await _propositionRepository.updateProposition(proposition);
-  // }
 
 }
