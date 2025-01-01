@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../models/proposition_model.dart';
+import '../../../services/proposition_service.dart';
+
 class PropositionForm extends StatefulWidget {
   final Function(double tarif, String description, DateTime dateDispo, int demandeId) onSubmit;
   final int demandeId;
@@ -12,15 +15,27 @@ class PropositionForm extends StatefulWidget {
 
 class _PropositionFormState extends State<PropositionForm> {
   final _formKey = GlobalKey<FormState>();
+  final PropositionService _propositionService = PropositionService();
   String? _description;
   double? _tarif;
   DateTime? _dateDispo;
 
-  void _submitForm() {
+   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      widget.onSubmit(_tarif!, _description!, _dateDispo!, widget.demandeId);
-      Navigator.of(context).pop(); // Close the dialog
+      try {
+        Proposition proposition = Proposition(
+          description: _description!,
+          tarifProposer: _tarif!,
+          disponibiliteProposer: _dateDispo!,
+          demandeId: widget.demandeId,
+        );
+        await _propositionService.addProposition(proposition);
+        Navigator.of(context).pop(); // Close the dialog
+      } catch (e) {
+        // Handle error
+        print("Failed to add proposition: $e");
+      }
     }
   }
 

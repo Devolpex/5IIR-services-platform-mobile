@@ -1,14 +1,16 @@
 class Proposition {
-  String id;
+  String? id;
   String description;
   double tarifProposer;
   DateTime disponibiliteProposer;
+  int demandeId;
 
   Proposition({
-    required this.id,
+    this.id,
     required this.description,
     required this.tarifProposer,
     required this.disponibiliteProposer,
+    required this.demandeId,
   });
 
   factory Proposition.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class Proposition {
       description: json['description'],
       tarifProposer: json['tarifProposer'],
       disponibiliteProposer: DateTime.parse(json['disponibiliteProposer']),
+      demandeId: json['demandeId'],
     );
   }
 
@@ -25,7 +28,8 @@ class Proposition {
       'id': id,
       'description': description,
       'tarifProposer': tarifProposer,
-      'disponibiliteProposer': disponibiliteProposer.toIso8601String(),
+      'dateDisponibilite': disponibiliteProposer.toIso8601String(),
+      'demandeId': demandeId,
     };
   }
 }
