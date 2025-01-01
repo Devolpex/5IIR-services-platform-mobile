@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 
 import '../../models/demande_model.dart';
 import '../../services/demande_service.dart';
+import 'material/proposition_form.dart';
 
 class DemandeList extends StatefulWidget {
 const DemandeList({ Key? key }) : super(key: key);
@@ -47,8 +48,22 @@ class _DemandeListState extends State<DemandeList> {
     }
   }
 
-  void onAproved(){
-    print("Aproved");
+  
+
+   void onApproved(int demandeId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PropositionForm(
+          onSubmit: (tarif, description, dateDispo, demandeId) {
+            // Handle the proposition submission
+            print('Tarif: $tarif, Description: $description, Date: $dateDispo, Demande ID: $demandeId');
+            // Send the proposition to the server or process it
+          },
+          demandeId: demandeId,
+        );
+      },
+    );
   }
 
   void onQueryChanged(String query) {
@@ -113,7 +128,7 @@ class _DemandeListState extends State<DemandeList> {
                                 Text("Description: ${demande.description}"),
                                Row(children: [
                                 FilledButton(
-                                  onPressed: onAproved, style: FilledButton.styleFrom(
+                                  onPressed:  () => onApproved(demande.id) , style: FilledButton.styleFrom(
                                     backgroundColor: Colors.green,
                                     foregroundColor: Colors.white
                                   ),
@@ -121,7 +136,7 @@ class _DemandeListState extends State<DemandeList> {
                                 ),
                                 SizedBox(width: 8),
                                 ElevatedButton(
-                                  onPressed: onAproved,style: FilledButton.styleFrom(
+                                  onPressed: (){},style: FilledButton.styleFrom(
                                     backgroundColor: Colors.green[900],
                                     foregroundColor: Colors.white
                                   ),
