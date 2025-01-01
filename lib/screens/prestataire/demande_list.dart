@@ -132,7 +132,7 @@ class _DemandeListState extends State<DemandeList> {
                                     backgroundColor: Colors.green,
                                     foregroundColor: Colors.white
                                   ),
-                                  child: Text("Approuved"),
+                                  child: Text("Add Proposition"),
                                 ),
                                 SizedBox(width: 8),
                                 ElevatedButton(

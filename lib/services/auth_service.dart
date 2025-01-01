@@ -59,6 +59,21 @@ class AuthService {
     }
   }
 
+  String? getAuthId() {
+    try {
+      final data = authBox.keys.map((key) {
+        final value = authBox.get(key);
+        if (value == null) return null;
+        var value1 = value["id"];
+        return value1.toString();
+      }).toList();
+      return data.reversed.toList().whereType<String>().single;
+    } catch (e) {
+      print("getAuthId error: $e");
+      return null;
+    }
+  }
+
   String? getAuthRole() {
     try {
       final data = authBox.keys.map((key) {
