@@ -2,24 +2,24 @@ import 'package:mobile/models/dto/demandeDto.dart';
 import 'package:mobile/models/dto/prestataireDto.dart';
 
 class Propositiondto {
-  int id;
-  String description;
-  double tarifProposer;
-  DateTime dateDisponible;
-  Demandedto demande;
-  Prestatairedto prestataire;
-  DateTime createdAt;
-  DateTime updatedAt;
+  int? id;
+  String? description;
+  double? tarifProposer;
+  DateTime? dateDisponible;
+  Demandedto? demande;
+  Prestatairedto? prestataire;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   Propositiondto({
-    required this.id,
-    required this.description,
-    required this.tarifProposer,
-    required this.dateDisponible,
-    required this.demande,
-    required this.prestataire,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.description,
+    this.tarifProposer,
+    this.dateDisponible,
+    this.demande,
+    this.prestataire,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Propositiondto.fromJson(Map<String, dynamic> json) {
@@ -37,10 +37,11 @@ class Propositiondto {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'description': description,
       'tarifProposer': tarifProposer,
-      'dateDisponible': dateDisponible.toIso8601String(),
+      'dateDisponibilite': dateDisponible!.toIso8601String(),
     };
   }
+
+
 }
