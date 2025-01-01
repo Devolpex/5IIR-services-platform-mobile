@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/proposition_model.dart';
 import '../../../services/proposition_service.dart';
+import '../../../utils/top_snackbar.dart';
 
 class PropositionForm extends StatefulWidget {
   final Function(double tarif, String description, DateTime dateDispo, int demandeId) onSubmit;
@@ -20,7 +21,7 @@ class _PropositionFormState extends State<PropositionForm> {
   double? _tarif;
   DateTime? _dateDispo;
 
-   void _submitForm() async {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
@@ -31,12 +32,21 @@ class _PropositionFormState extends State<PropositionForm> {
           demandeId: widget.demandeId,
         );
         await _propositionService.addProposition(proposition);
-        Navigator.of(context).pop(); // Close the dialog
+        _showSuccessMessage();
       } catch (e) {
         // Handle error
         print("Failed to add proposition: $e");
       }
     }
+  }
+
+  void _showSuccessMessage() {
+    showMessage(
+      message: 'Proposition added successfully!',
+      title: 'Success',
+      type: MessageType.success,
+    );
+    Navigator.of(context).pop(); // Close the form dialog
   }
 
   Future<void> _selectDate(BuildContext context) async {
